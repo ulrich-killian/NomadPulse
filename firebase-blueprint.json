@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with basic information",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique user credentials identifier"
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User's public display name"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of profile creation"
+        }
+      },
+      "required": ["uid", "email"]
+    },
+    "Trip": {
+      "title": "Trip",
+      "description": "Travel itinerary with destinations, start/end dates",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the trip"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user foreign key reference"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name or title of the trip"
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO start date of travel"
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO end date of travel"
+        },
+        "destinations": {
+          "type": "array",
+          "description": "List of destination titles"
+        }
+      },
+      "required": ["id", "userId", "name", "startDate", "endDate", "destinations"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/public/profile": {
+      "schema": "User",
+      "description": "Public profile configuration details"
+    },
+    "/trips/{tripId}": {
+      "schema": "Trip",
+      "description": "Collection of user-created travel itineraries"
+    }
+  }
+}
