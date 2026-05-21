@@ -1,0 +1,6 @@
+{
+  "name": "NomadPulse",
+  "description": "A comprehensive digital nomad companion featuring real-time currency conversion, local weather, curated tours, attractions explorer, airport logistics, and Google Maps integration.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

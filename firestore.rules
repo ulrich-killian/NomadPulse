@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Core Primitive Authentication helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+
+    // Rules for User Public Profiles
+    match /users/{userId}/public/profile {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName'])
+      );
+    }
+    
+    function isValidUser(data) {
+      return data.uid == request.auth.uid 
+          && data.email is string && data.email.size() <= 256
+          && (!data.keys().contains('displayName') || (data.displayName is string && data.displayName.size() <= 128));
+    }
+
+    // Rules for User-created Travel Itineraries (Trips)
+    match /trips/{tripId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && isValidId(tripId) && isValidTrip(incoming()) && incoming().userId == request.auth.uid;
+      
+      allow update: if isSignedIn() && isValidId(tripId) && isValidTrip(incoming()) 
+                     && existing().userId == request.auth.uid 
+                     && incoming().userId == request.auth.uid 
+                     && (incoming().diff(existing()).affectedKeys().hasAny(['name', 'startDate', 'endDate', 'destinations']));
+      
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    function isValidTrip(data) {
+      return data.id is string && data.id.size() <= 128
+          && data.userId == request.auth.uid
+          && data.name is string && data.name.size() > 0 && data.name.size() <= 256
+          && data.startDate is string && data.startDate.size() <= 32
+          && data.endDate is string && data.endDate.size() <= 32
+          && data.destinations is list && data.destinations.size() <= 50;
+    }
+  }
+}
